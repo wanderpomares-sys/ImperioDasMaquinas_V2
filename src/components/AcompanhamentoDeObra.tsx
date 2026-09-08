@@ -25,8 +25,90 @@ import { useEffect } from 'react';
 import { useGameState } from '@/lib/useGameState';
 import { fmt, MACHINES as MACHINES_TEMPLATE } from '@/lib/game-logic';
 import type { AcceptedContract, RiskLevel } from '@/lib/game-logic';
+import missoesSedeData from '../../public/data/missoes_sede.json';
 
 const ETAPAS = ['Terraplenagem', 'Fundação', 'Estrutura', 'Finalização'] as const;
+
+// ============================================================================
+// Rota da sede — tira visual dos 5 níveis de sede (Barracão > Garagem >
+// Regional > Filial > Império), lida direto de public/data/missoes_sede.json.
+// É só apresentação: quem decide o nível atual continua sendo
+// player.playerSedeNivel (já existe em game-logic.ts/SEDES_DATA desde a
+// extração do app.html). Compra de sede, requisitos de missão por sede
+// (MISSOES_POR_SEDE do app.html) e resgate de recompensa continuam
+// "Pendente" — não inventados aqui, ver CLAUDE.md.
+// ============================================================================
+interface MissaoSede {
+  id: number;
+  titulo: string;
+  objetivo: string;
+  imagem: string;
+  rendimento: string;
+}
+
+const MISSOES_SEDE = (missoesSedeData as { missoes: MissaoSede[] }).missoes;
+
+function RotaDaSede({ nivelAtual }: { nivelAtual: number }) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-[#FFC400]/20 bg-[#1E232C]/80 p-5 shadow-[0_0_30px_rgba(255,196,0,0.1)] backdrop-blur-xl md:p-7">
+      <div className="text-sm font-black uppercase tracking-widest text-[#FFC400]/60">Rota da sede</div>
+      <p className="mt-1 text-xs text-white/40">
+        Do barracão ao império — cada nível libera capacidade e rendimento novos.
+      </p>
+
+      <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        {MISSOES_SEDE.map((m) => {
+          const concluido = m.id < nivelAtual;
+          const atual = m.id === nivelAtual;
+          const bloqueado = m.id > nivelAtual;
+
+          return (
+            <motion.div
+              key={m.id}
+              whileHover={bloqueado ? undefined : { scale: 1.03 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+              className={`relative overflow-hidden rounded-xl border bg-black/20 ${
+                atual
+                  ? 'border-[#FFC400] shadow-[0_0_20px_rgba(255,196,0,0.35)]'
+                  : concluido
+                    ? 'border-[#22C55E]/40'
+                    : 'border-white/10'
+              }`}
+            >
+              <div className="relative h-28 w-full">
+                <Image
+                  src={m.imagem}
+                  alt={m.titulo}
+                  fill
+                  sizes="(min-width: 1024px) 200px, (min-width: 640px) 33vw, 50vw"
+                  className={`object-cover transition ${bloqueado ? 'opacity-40 grayscale' : ''}`}
+                />
+
+                {atual && (
+                  <span className="absolute right-2 top-2 rounded-full bg-[#FFC400] px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-black">
+                    Atual
+                  </span>
+                )}
+                {concluido && (
+                  <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#22C55E] text-[10px] font-black text-black">
+                    ✓
+                  </span>
+                )}
+                {bloqueado && <span className="absolute right-2 top-2 text-sm">🔒</span>}
+
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-2.5">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[#FFC400]">{m.rendimento}</div>
+                  <div className="text-xs font-bold text-white">{m.titulo.replace(/^Nível \d+ - /, '')}</div>
+                </div>
+              </div>
+              <div className="p-2.5 text-[11px] text-white/50">{m.objetivo}</div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 const RISCO_COR: Record<RiskLevel, { texto: string; fundo: string; borda: string; label: string }> = {
   low: { texto: 'text-[#22C55E]', fundo: 'bg-[#22C55E]/10', borda: 'border-[#22C55E]/30', label: 'BAIXO' },
@@ -213,23 +295,29 @@ export default function AcompanhamentoDeObra() {
     const primeiroDisponivel = Object.entries(contracts).find(([, c]) => c.state === 'DISPONIVEL' && c.hasMachine);
 
     return (
-      <div className="relative overflow-hidden rounded-2xl border border-[#FFC400]/20 bg-[#1E232C]/80 p-8 text-center shadow-[0_0_30px_rgba(255,196,0,0.1)] backdrop-blur-xl">
-        <div className="text-sm font-black uppercase tracking-widest text-[#FFC400]/60">Acompanhamento de obra</div>
-        <p className="mt-2 text-white/60">Nenhuma obra em andamento no momento.</p>
-        {primeiroDisponivel && (
-          <button
-            onClick={() => aceitarContrato(primeiroDisponivel[0])}
-            className="mt-5 rounded-xl bg-[#FFC400] px-6 py-3 text-sm font-black uppercase tracking-widest text-black"
-          >
-            Aceitar &ldquo;{primeiroDisponivel[1].name}&rdquo;
-          </button>
-        )}
+      <div className="space-y-6">
+        <RotaDaSede nivelAtual={player.playerSedeNivel} />
+
+        <div className="relative overflow-hidden rounded-2xl border border-[#FFC400]/20 bg-[#1E232C]/80 p-8 text-center shadow-[0_0_30px_rgba(255,196,0,0.1)] backdrop-blur-xl">
+          <div className="text-sm font-black uppercase tracking-widest text-[#FFC400]/60">Acompanhamento de obra</div>
+          <p className="mt-2 text-white/60">Nenhuma obra em andamento no momento.</p>
+          {primeiroDisponivel && (
+            <button
+              onClick={() => aceitarContrato(primeiroDisponivel[0])}
+              className="mt-5 rounded-xl bg-[#FFC400] px-6 py-3 text-sm font-black uppercase tracking-widest text-black"
+            >
+              Aceitar &ldquo;{primeiroDisponivel[1].name}&rdquo;
+            </button>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      <RotaDaSede nivelAtual={player.playerSedeNivel} />
+
       {acceptedContracts.map((ac) => (
         <CardObra key={ac.key} ac={ac} />
       ))}
