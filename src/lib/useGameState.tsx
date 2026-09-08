@@ -4,8 +4,8 @@
 // Ponte mínima entre game-logic.ts (dados/regras puras) e os componentes React.
 // Não existia um equivalente disso no app.html — lá, MACHINES/CONTRACTS/playerCash
 // eram variáveis globais mutadas direto pelas funções de render. Em React,
-// centralizamos isso num Context pra Hud/Frota/Contratos lerem o mesmo estado
-// sem duplicar cópias.
+// centralizamos isso num Context pra Hud/Frota/AcompanhamentoDeObra lerem o
+// mesmo estado sem duplicar cópias.
 // ============================================================================
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
@@ -27,6 +27,7 @@ interface GameContextValue {
   contracts: ContractsState;
   restaurado: boolean;
   aceitarContrato: (key: string) => { ok: boolean; motivo?: string };
+  avancarDia: (key: string) => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -102,15 +103,43 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ...prev,
       acceptedContracts: [
         ...prev.acceptedContracts,
-        { key, name: contrato.name, machineKeys, state: 'EM_ANDAMENTO' },
+        {
+          key,
+          name: contrato.name,
+          value: contrato.value,
+          prazoDias: contrato.prazoDias,
+          diasDecorridos: 0,
+          progress: 0,
+          machineKeys,
+          state: 'EM_ANDAMENTO',
+        },
       ],
     }));
 
     return { ok: true };
   }
 
+  // Versão mínima de avancarContrato() (app.html linha ~3883-3969): avança
+  // 1 dia de obra e recalcula o progresso linearmente. A função completa do
+  // original também sorteia eventos de contrato, risco intercorrente e multa de
+  // atraso — isso é Fase 2 da migração (ver CLAUDE.md) e não está aqui ainda.
+  // Isso não substitui aquela função: é só o suficiente pra AcompanhamentoDeObra
+  // ter dado real (diasDecorridos/progress) pra mostrar em vez de ficar preso em 0%.
+  function avancarDia(key: string): void {
+    setPlayer((prev) => ({
+      ...prev,
+      acceptedContracts: prev.acceptedContracts.map((ac) => {
+        if (ac.key !== key) return ac;
+        const diasDecorridos = (ac.diasDecorridos || 0) + 1;
+        const progress = Math.min(100, Math.round((diasDecorridos / ac.prazoDias) * 100));
+        const state = diasDecorridos > ac.prazoDias ? ('ATRASADO' as const) : ac.state;
+        return { ...ac, diasDecorridos, progress, state };
+      }),
+    }));
+  }
+
   return (
-    <GameContext.Provider value={{ player, machines, contracts, restaurado, aceitarContrato }}>
+    <GameContext.Provider value={{ player, machines, contracts, restaurado, aceitarContrato, avancarDia }}>
       {children}
     </GameContext.Provider>
   );

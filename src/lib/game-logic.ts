@@ -92,11 +92,24 @@ export interface Contract {
 
 export type ContractsState = Record<string, Contract>;
 
+// Mesmo shape de acceptedContracts.push(...) no app.html (linha ~3475-3480).
+// Campos de seguro/cliente ficam opcionais aqui porque a tela de detalhe do
+// contrato (com escolha de seguro e contato do cliente) ainda não foi portada —
+// quando for, preencher com o mesmo nome de campo, nunca inventar um novo.
 export interface AcceptedContract {
   key: string;
   name: string;
+  value: number;
+  prazoDias: number;
+  diasDecorridos: number;
+  progress: number;
   machineKeys: string[];
   state: 'EM_ANDAMENTO' | 'EM_RISCO' | 'ATRASADO';
+  seguro?: string;
+  custoSeguroPago?: number;
+  custoRiscoAdministrado?: number;
+  custoAtraso?: number;
+  eventoAtivo?: unknown;
   [key: string]: unknown;
 }
 
