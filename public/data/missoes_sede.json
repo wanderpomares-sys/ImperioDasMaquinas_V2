@@ -1,0 +1,9 @@
+{
+  "missoes": [
+    {"id":1,"titulo":"Nível 1 - Barracão","objetivo":"Conclua 3 contratos de limpeza","imagem":"/assets/sedes/sede-1.jpg","rendimento":"+5/h"},
+    {"id":2,"titulo":"Nível 2 - Garagem","objetivo":"Compre CAT 320D","imagem":"/assets/sedes/sede-2.jpg","rendimento":"+20/h"},
+    {"id":3,"titulo":"Nível 3 - Regional","objetivo":"Contrato Tier 2 sem multa","imagem":"/assets/sedes/sede-3.jpg","rendimento":"Oficina 150/h"},
+    {"id":4,"titulo":"Nível 4 - Filial","objetivo":"Fature R$500k","imagem":"/assets/sedes/sede-4.jpg","rendimento":"Solar 85%"},
+    {"id":5,"titulo":"Nível 5 - Império","objetivo":"Domine 5 Tier 3","imagem":"/assets/sedes/sede-5.jpg","rendimento":"Heliponto + 12.450/h"}
+  ]
+}
