@@ -27,7 +27,7 @@ export default function HubPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-bold text-white">Acompanhamento de Obra</h2>
+        <h2 className="mb-3 text-lg font-bold text-white"> Acompanhamento de Obra </h2>
         <AcompanhamentoDeObra />
       </section>
     </main>
