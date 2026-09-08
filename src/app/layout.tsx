@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { GameProvider } from '@/lib/useGameState';
+import BottomNav from '@/components/BottomNav';
 
 export const metadata: Metadata = {
   title: 'Império das Máquinas',
@@ -10,8 +11,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body className="bg-background">
-        <GameProvider>{children}</GameProvider>
+      <body className="bg-[#0F1218] pb-20">
+        <GameProvider>
+          {children}
+          <BottomNav />
+        </GameProvider>
       </body>
     </html>
   );
